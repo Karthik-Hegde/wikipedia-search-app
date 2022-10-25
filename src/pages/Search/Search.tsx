@@ -3,6 +3,7 @@ import { pipe } from "fp-ts/lib/function";
 import * as S from "fp-ts/lib/string";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as E from "fp-ts/lib/Either";
+import * as O from "fp-ts/lib/Option";
 import * as RD from "remote-data-ts";
 import axios from "axios";
 import SearchResult from "../../components/SearchResult/SearchResult";
@@ -19,11 +20,9 @@ const Search = () => {
     RD.notAsked
   );
 
-  const getInputValue = (
-    inputEvent: React.ChangeEvent<HTMLInputElement>
-  ): string => {
-    return pipe(inputEvent.target.value, S.trim);
-  };
+  const getOption = O.fromPredicate(
+    (str: string) => !S.Eq.equals(pipe(str, S.trim), "")
+  );
 
   const getUrl = (query: string): string => {
     return `${BASE_URL}${query}`;
@@ -39,16 +38,19 @@ const Search = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    if (value) {
-      searchWikipedia(e);
-    } else {
-      setResult(RD.notAsked);
-    }
+    pipe(
+      value,
+      getOption,
+      O.fold(
+        () => setResult(RD.notAsked),
+        (query) => searchWikipedia(query)
+      )
+    );
   };
 
-  const searchWikipedia = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const searchWikipedia = (query: string) => {
     setResult(RD.loading);
-    const url = pipe(e, getInputValue, getUrl);
+    const url = pipe(query, getUrl);
     fetchSearchResult(url)
       .then((response) =>
         pipe(
