@@ -63,8 +63,8 @@ const Search = () => {
   };
 
   return (
-    <div className="m-auto border-0" style={{ width: "90%" }}>
-      <h1>Wikipedia Search API</h1>
+    <div className="container-sm">
+      <h1 className="mt-4">Wikipedia Search API</h1>
       <input
         type="text"
         value={query}
